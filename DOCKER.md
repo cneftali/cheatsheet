@@ -1,4 +1,4 @@
-# My Docker FAQ / TIPS
+# My Docker CHEATS
 
 ## Docker Command
 
@@ -18,8 +18,14 @@
 
   4. Kill all running containers
 
-      $ docker kill $(sudo docker ps -q)
+      $ sudo docker kill $(sudo docker ps -q)
 
+### Docker Run
+
+  1. Bash
+
+    $ sudo docker run -i -t --entrypoint /bin/bash <IMAGE_ID>
+    $ sudo docker exec -it <CONTAINER_ID> bash
 
 ## Docker Compose Command
 
