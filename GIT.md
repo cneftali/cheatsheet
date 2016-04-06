@@ -2,54 +2,59 @@
 
 
 ## En Vrac
+```sh
+	$ git update-index --chmod=+x execute.sh
+	$ git ls-files --stage
+	$ git add --all
+```
+## Git Flow Without Cammand
 
-$ git update-index --chmod=+x execute.sh
-$ git ls-files --stage
-$ git add --all
+```sh
+	$ git checkout -b feature/toto develop
+	$ git checkout develop
+	$ git merge --no-ff feature/toto
+	$ git branch -d feature/toto
+	$ git push origin develop
+```
 
 ## Git Flow
-
-$ git checkout -b feature/toto develop
-$ git checkout develop
-$ git merge --no-ff feature/toto
-$ git branch -d feature/toto
-$ git push origin develop
-
-$ apt-get install git-flow
-
+```sh
+	$ apt-get install git-flow
+```
 ### Initialize
-
-$ git flow init
-
+```sh
+	$ git flow init
+```
 ### Start a new feature
-
-$ git flow feature start MYFEATURE
-
+```sh
+	$ git flow feature start MYFEATURE
+```
 ### Finish up a feature
-
-$ git flow feature finish MYFEATURE
-
+```sh
+	$ git flow feature finish MYFEATURE
+```
 ### Publish a feature
-
-$ git flow feature publish MYFEATURE
-
+```sh
+	$ git flow feature publish MYFEATURE
+```
 ### Getting a published feature
-
-$ git flow feature pull origin MYFEATURE
-$ git flow feature track MYFEATURE
-
+```sh
+	$ git flow feature pull origin MYFEATURE
+	$ git flow feature track MYFEATURE
+```
 ### Start a release
-
-$ git flow release start RELEASE [BASE]
-$ git flow release publish RELEASE
-$ git flow release track RELEASE
-
+```sh
+	$ git flow release start RELEASE [BASE]
+	$ git flow release publish RELEASE
+	$ git flow release track RELEASE
+```
 ### Finish up a release
-
-$ git flow release finish RELEASE
-$ git push --tags
-
+```sh
+	$ git flow release finish RELEASE
+	$ git push --tags
+```
 ### git flow hotfix start
-
-$ git flow hotfix start VERSION [BASENAME]
-$ git flow hotfix finish VERSION
+```sh
+	$ git flow hotfix start VERSION [BASENAME]
+	$ git flow hotfix finish VERSION
+```	
