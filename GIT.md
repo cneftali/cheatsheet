@@ -7,7 +7,7 @@
 	$ git ls-files --stage
 	$ git add --all
 ```
-## Git Flow Without Cammand
+## Git Flow Without Git Flow Command
 
 ```sh
 	$ git checkout -b feature/toto develop
