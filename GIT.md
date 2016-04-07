@@ -7,7 +7,7 @@ $ git update-index --chmod=+x execute.sh
 $ git ls-files --stage
 $ git add --all
 ```
-## Git Flow Without Cammand
+## Git Flow Without Git Flow Command
 
 ```sh
 $ git checkout -b feature/toto develop
@@ -55,6 +55,12 @@ $ git push --tags
 ```
 ### git flow hotfix start
 ```sh
+<<<<<<< HEAD
 $ git flow hotfix start VERSION [BASENAME]
 $ git flow hotfix finish VERSION
 ```
+=======
+	$ git flow hotfix start VERSION [BASENAME]
+	$ git flow hotfix finish VERSION
+```	
+>>>>>>> 69f05a7c546b3758f020b0d2ea76b324fffc83eb
