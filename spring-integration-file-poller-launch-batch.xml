@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xmlns:integration-jmx="http://www.springframework.org/schema/integration/jmx"
+       xmlns:integration-file="http://www.springframework.org/schema/integration/file"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/integration
+        http://www.springframework.org/schema/integration/spring-integration.xsd
+        http://www.springframework.org/schema/integration/jmx
+        http://www.springframework.org/schema/integration/jmx/spring-integration-jmx.xsd
+        http://www.springframework.org/schema/integration/file
+        http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <integration-jmx:mbean-export id="integrationMBeanExporter"
+                                  default-domain="${spring.application.name}"/>
+
+
+    <!-- Premier point d'entrée -->
+    <integration-file:inbound-channel-adapter id="filesIn"
+                                              filename-pattern="${files.extension}"
+                                              directory="${polling.attachment.spool.directory}"
+                                              auto-create-directory="false"
+                                              prevent-duplicates="true"
+                                              auto-startup="true"
+                                              scanner="customDirectoryScanner"
+                                              channel="fileInputChannel"
+                                              comparator="customFilesComparator">
+
+        <integration:poller default="true"
+                            cron="*/1 * * * * *"/>
+    </integration-file:inbound-channel-adapter>
+
+    <integration:channel id="fileInputChannel" datatype="java.io.File"/>
+
+
+    <integration:transformer input-channel="fileInputChannel"
+                             output-channel="rendezVousChannel"
+                             ref="messageTransformer"/>
+
+
+    <integration:channel id="rendezVousChannel">
+        <integration:rendezvous-queue />
+    </integration:channel>
+
+    <!-- L'error channel est redéfini afin de ne pas tenir compte des exceptions du type RejectedExecutionException -->
+    <integration:channel id="errorChannel"/>
+    <integration:service-activator input-channel="errorChannel" ref="errorLogger"/>
+
+    <integration:service-activator input-channel="rendezVousChannel" output-channel="jobResultChannel">
+        <integration:poller max-messages-per-poll="1"
+                            task-executor="jobTaskExecutor"
+                            fixed-delay="1000"/>
+        <bean class="com.xxx.transactional.attachment.service.batch.JobLaunchingMessageHandler">
+            <property name="slaveId" value="1"/>
+            <property name="jobLauncher" ref="jobLauncher"/>
+            <property name="channelAdapter" ref="filesIn"/>
+        </bean>
+    </integration:service-activator>
+
+    <task:executor id="jobTaskExecutor"
+                   pool-size="${job.taskexecutor.pool.size:1-2}"
+                   queue-capacity="${job.taskexecutor.queue.capacity:1}"/>
+
+    <integration:channel id="jobResultChannel"/>
+
+    <integration:transformer input-channel="jobResultChannel"
+                             output-channel="arrayBlockingQueueChannel"
+                             ref="flumeEventTransformer"/>
+
+    <integration:aggregator input-channel="arrayBlockingQueueChannel"
+                            output-channel="flumeAggrChannel"
+                            send-partial-result-on-expiry="true"
+                            group-timeout="${flume.agent.batch.timeout:1000}"
+                            correlation-strategy-expression="T(Thread).currentThread().id"
+                            release-strategy-expression="size() == #{'${flume.agent.batch.size:100}'}">
+        <integration:poller max-messages-per-poll="${flume.agent.batch.size:100}" fixed-rate="${flume.agent.batch.timeout:1000}"/>
+    </integration:aggregator>
+
+    <integration:channel id="flumeAggrChannel"/>
+
+
+    <integration:outbound-channel-adapter channel="flumeAggrChannel" ref="flumePostProcessorReceiver"
+                                          method="handleMessage"/>
+</beans>
