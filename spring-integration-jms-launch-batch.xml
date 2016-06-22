@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xmlns:integration-jms="http://www.springframework.org/schema/integration/jms"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/integration
+        http://www.springframework.org/schema/integration/spring-integration.xsd
+        http://www.springframework.org/schema/integration/jms
+        http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd">
+
+
+    <integration-jms:inbound-gateway id="jmsEndpointPrimaryBean"
+                                     request-channel="requestChannel"
+                                     error-channel="errorChannel"
+                                     connection-factory="connectionPrimaryFactory"
+                                     request-destination-name="${application.activemq.queue.name}"
+                                     extract-request-payload="true"
+                                     message-converter="messageConverter"
+                                     concurrent-consumers="1"
+                                     max-concurrent-consumers="${application.consumer.container.max.concurrent.consumers:5}"
+                                     idle-task-execution-limit="${application.consumer.container.idle.task.execution.limit:5000}"
+                                     receive-timeout="${application.consumer.container.receive.timeout:5000}"
+                                     recovery-interval="${application.consumer.container.recovery.interval}"
+                                     acknowledge="auto"/>
+
+    <integration-jms:inbound-gateway id="jmsEndpointSecondaryBean"
+                                     request-channel="requestChannel"
+                                     error-channel="errorChannel"
+                                     connection-factory="connectionSecondaryFactory"
+                                     request-destination-name="${application.activemq.queue.name}"
+                                     extract-request-payload="true"
+                                     message-converter="messageConverter"
+                                     concurrent-consumers="1"
+                                     max-concurrent-consumers="${application.consumer.container.max.concurrent.consumers:5}"
+                                     idle-task-execution-limit="${application.consumer.container.idle.task.execution.limit:5000}"
+                                     receive-timeout="${application.consumer.container.receive.timeout:5000}"
+                                     recovery-interval="${application.consumer.container.recovery.interval}"
+                                     acknowledge="auto" />
+
+    <integration:channel id="requestChannel" >
+        <integration:dispatcher task-executor="jobTaskExecutor" />
+    </integration:channel>
+
+    <integration:service-activator input-channel="requestChannel"
+                                   output-channel="jobResultChannel">
+        <bean class="com.xxx.job.scheduler.batch.SimpleJmsJobLaunchingMessageHandler">
+            <property name="jobRegistry" ref="jobRegistry"/>
+            <property name="jobLauncher" ref="jobLauncher"/>
+        </bean>
+    </integration:service-activator>
+
+    <integration:channel id="jobResultChannel"/>
+    <integration:service-activator input-channel="jobResultChannel"
+                                   ref="jobResultServiceActivator"/>
+
+    <integration:channel id="errorChannel"/>
+    <integration:service-activator input-channel="errorChannel"
+                                   ref="errorLogger" />
+
+</beans>
