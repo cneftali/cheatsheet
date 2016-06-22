@@ -56,7 +56,7 @@
         <integration:poller max-messages-per-poll="1"
                             task-executor="jobTaskExecutor"
                             fixed-delay="1000"/>
-        <bean class="com.xxx.transactional.attachment.service.batch.JobLaunchingMessageHandler">
+        <bean class="com.xxx.service.batch.JobLaunchingMessageHandler">
             <property name="slaveId" value="1"/>
             <property name="jobLauncher" ref="jobLauncher"/>
             <property name="channelAdapter" ref="filesIn"/>
